@@ -16,8 +16,6 @@ public class Default {
 	
 	private String loglevel;
 	private String logger;
-	private String errorMessage;
-	private String stackTrace;
 	private String day;
 	private String month;
 	private String year;
