@@ -1,11 +1,13 @@
 package com.log.analysis.elasticsearch.controller;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,16 +18,18 @@ import com.log.analysis.elasticsearch.model.ExceptionDefault;
 
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/logs")
 public class GetDataController {
 	
 	@Autowired
 	private GetDataService getDataService;
 	
+	
 	@GetMapping(path = "simplelogs")
-	public ResponseEntity<List<Default>> getDefaultSimpleLogs(){
+	public ResponseEntity<Page<Default>> getDefaultSimpleLogs(Pageable pageable){
 		try {
-			List<Default> myDataList = getDataService.getSimpleLogs();
+			Page<Default> myDataList = getDataService.getSimpleLogs(pageable);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -34,9 +38,9 @@ public class GetDataController {
 	}
 	
 	@GetMapping(path = "exceptionlogs")
-	public ResponseEntity<List<ExceptionDefault>> getDefaultExceptionogs(){
+	public ResponseEntity<Page<ExceptionDefault>> getDefaultExceptionogs(Pageable pageable){
 		try {
-			List<ExceptionDefault> myDataList = getDataService.getExceptionLogs();
+			Page<ExceptionDefault> myDataList = getDataService.getExceptionLogs(pageable);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
