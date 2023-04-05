@@ -9,6 +9,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -29,6 +30,44 @@ public class GetDataService {
 	@Autowired
 	private RestHighLevelClient restClient;
 
+	
+	public List<ExceptionDefault> getLogsWithSpecificMessage(String errorMessage) throws IOException {
+		
+		List<ExceptionDefault> logs = new ArrayList<>();
+		
+		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		
+		searchSourceBuilder.query(QueryBuilders.matchQuery("ErrorMessage", errorMessage));
+	    //searchSourceBuilder.query(queryBuilder);
+
+		searchSourceBuilder.size(1000);
+		
+		searchRequest.source(searchSourceBuilder);
+		
+		SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
+		
+		SearchHits hits = searchResponse.getHits();
+		
+		System.out.println(hits);
+		for (SearchHit hit: hits) {
+			ExceptionDefault log = new ExceptionDefault();
+
+			// Check if "ErrorMessage" key exists and if it's not null before accessing it
+			if (hit.getSourceAsMap().containsKey("ErrorMessage") && hit.getSourceAsMap().get("ErrorMessage") != null) {
+				log.setErrorMessage(hit.getSourceAsMap().get("ErrorMessage").toString());
+				String stackTrace = hit.getSourceAsMap().get("StackTrace").toString();
+				List<String> lines = new ArrayList<>(Arrays.asList(stackTrace.split("\\r\\n\\tat ")));
+				log.setStackTrace(lines);
+				logs.add(log);
+			}
+			
+			
+		}
+		
+		return logs;
+	}
+	
 	public Page<Default> getSimpleLogs(Pageable pageable) throws IOException {
 
 		SearchRequest searchRequest = new SearchRequest("default_log_index");

@@ -1,6 +1,8 @@
 package com.log.analysis.elasticsearch.controller;
 
 import java.io.IOException;
+import java.util.List;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.log.analysis.elasticsearch.GetDataService;
@@ -41,6 +44,19 @@ public class GetDataController {
 	public ResponseEntity<Page<ExceptionDefault>> getDefaultExceptionogs(Pageable pageable){
 		try {
 			Page<ExceptionDefault> myDataList = getDataService.getExceptionLogs(pageable);
+			return new ResponseEntity<> (myDataList,HttpStatus.OK);
+		}catch (IOException e) {
+			e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	
+	@GetMapping("filter/errormessage")
+	public ResponseEntity<List<ExceptionDefault>> filterErrorException(@RequestParam("errorMessage") String errorMessage){
+	
+		try {
+			List<ExceptionDefault> myDataList = getDataService.getLogsWithSpecificMessage(errorMessage);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
