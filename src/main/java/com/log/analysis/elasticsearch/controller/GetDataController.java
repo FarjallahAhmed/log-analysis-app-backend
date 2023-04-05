@@ -79,5 +79,18 @@ public class GetDataController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	
+	@GetMapping("filter/logmessage")
+	public ResponseEntity<List<Default>> filterLogByMessage(@RequestParam("logmessage") String logmessage){
+	
+		try {
+			List<Default> myDataList = filterLogsService.filterLogsByMessageKeyword(logmessage);
+			return new ResponseEntity<> (myDataList,HttpStatus.OK);
+		}catch (IOException e) {
+			e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
 }
