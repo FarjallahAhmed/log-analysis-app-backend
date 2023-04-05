@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.log.analysis.elasticsearch.FilterLogsService;
 import com.log.analysis.elasticsearch.GetDataService;
 import com.log.analysis.elasticsearch.model.Default;
 import com.log.analysis.elasticsearch.model.ExceptionDefault;
@@ -27,6 +28,9 @@ public class GetDataController {
 	
 	@Autowired
 	private GetDataService getDataService;
+	
+	@Autowired
+	private FilterLogsService filterLogsService;
 	
 	
 	@GetMapping(path = "simplelogs")
@@ -57,6 +61,18 @@ public class GetDataController {
 	
 		try {
 			List<ExceptionDefault> myDataList = getDataService.getLogsWithSpecificMessage(errorMessage);
+			return new ResponseEntity<> (myDataList,HttpStatus.OK);
+		}catch (IOException e) {
+			e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@GetMapping("filter/loglevel")
+	public ResponseEntity<List<Default>> filterLogLevel(@RequestParam("loglevel") String loglevel){
+	
+		try {
+			List<Default> myDataList = filterLogsService.filterDefaultWithLogLevel(loglevel);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
