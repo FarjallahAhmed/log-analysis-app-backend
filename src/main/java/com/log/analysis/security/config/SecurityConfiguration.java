@@ -22,34 +22,36 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 public class SecurityConfiguration {
 	
 	@Autowired
-	private  JwtAuthenticationFilter jwtAuthFilter;
+	private JwtAuthenticationFilter jwtAuthFilter;
+	
 	@Autowired
-	  private  AuthenticationProvider authenticationProvider;
+	private AuthenticationProvider authenticationProvider;
+	
 	@Autowired
-	  private  LogoutHandler logoutHandler;
+	private LogoutHandler logoutHandler;
 
-	  @Bean
-	  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	    http
-	        .csrf()
-	        .disable()
-	        .authorizeHttpRequests()
-	        .requestMatchers("/api/**") ///v1/auth/**
-	          .permitAll()
-	        .anyRequest()
-	          .authenticated()
-	        .and()
-	          .sessionManagement()
-	          .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-	        .and()
-	        .authenticationProvider(authenticationProvider)
-	        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-	        .logout()
-	        .logoutUrl("/api/v1/auth/logout")
-	        .addLogoutHandler(logoutHandler)
-	        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
-	    ;
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.csrf().disable()
+			.authorizeHttpRequests()
+				.requestMatchers(request -> !request.getServletPath().startsWith("/api/logs/**"))
+					.permitAll()
+				.requestMatchers(request -> request.getServletPath().startsWith("/api/v1/auth/**"))
+					.authenticated()
+				.anyRequest()
+					.denyAll()
+			.and()
+				.sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+			.and()
+				.authenticationProvider(authenticationProvider)
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+			.logout()
+				.logoutUrl("/api/v1/auth/logout")
+				.addLogoutHandler(logoutHandler)
+				.logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext());
 
-	    return http.build();
-	  }
+		return http.build();
+	}
 }
+

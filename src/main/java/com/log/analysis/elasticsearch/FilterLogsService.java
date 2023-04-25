@@ -97,5 +97,7 @@ public class FilterLogsService {
 		
 		return logs;
 	}
+	
+	
 
 }
