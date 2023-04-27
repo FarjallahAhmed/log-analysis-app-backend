@@ -13,6 +13,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -117,8 +118,12 @@ public class FilterLogsService {
 	    RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("@timestamp")
 	            .gte(startDate.getTime())
 	            .lte(endDate.getTime());
+	    
+	    BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+	            .must(rangeQuery)
+	            .must(QueryBuilders.existsQuery("log_date"));
 
-	    searchSourceBuilder.query(rangeQuery);
+	    searchSourceBuilder.query(boolQuery);
 	    searchRequest.source(searchSourceBuilder);
 
 	    SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
