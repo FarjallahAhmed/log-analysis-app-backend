@@ -58,4 +58,15 @@ public class AggregationController {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	@GetMapping("/summary")
+    public ResponseEntity<Map<String, Object>> getSummary() {
+        try {
+            Map<String, Object> summary = aggs.generateSummary();
+            return new ResponseEntity<>(summary, HttpStatus.OK);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
