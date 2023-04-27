@@ -13,11 +13,21 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
+
+import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.Range;
+
+
+
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-
 
 
 
@@ -62,7 +72,7 @@ public class AggregationLogsService {
 	}
 
 	
-public Map<String,Long> getTopMessage() throws IOException{
+	public Map<String,Long> getTopMessage() throws IOException{
 		
 		Map<String, Long> messageCount = new HashMap<>(); 
 		
@@ -90,9 +100,35 @@ public Map<String,Long> getTopMessage() throws IOException{
 		return messageCount;
 	}
 
+	public List<String> getDateRangeOfLogs() throws IOException {
+		
+		List<String> result = new ArrayList<>();
+		
+        SearchRequest searchRequest = new SearchRequest("default_log_index");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        DateRangeAggregationBuilder dateRangeAggregationBuilder = AggregationBuilders.dateRange("date_range")
+                .field("@timestamp")
+                .format("yyyy-MM-dd")
+                .addRange("last_year", "now-1y/y", "now");
+        searchSourceBuilder.aggregation(dateRangeAggregationBuilder);
+        searchRequest.source(searchSourceBuilder);
+        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+        
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        
+        Range dateRange = searchResponse.getAggregations().get("date_range");
 
+        for(Range.Bucket bucket : dateRange.getBuckets() ) {
+        	result.add(bucket.getFromAsString());
+        	result.add(bucket.getToAsString());
+        }
+        
+        return result;
+    }
+	
 
-
+        
 
 
 

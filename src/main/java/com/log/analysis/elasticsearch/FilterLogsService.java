@@ -2,18 +2,26 @@ package com.log.analysis.elasticsearch;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+
 
 import com.log.analysis.elasticsearch.model.Default;
 
@@ -98,6 +106,31 @@ public class FilterLogsService {
 		return logs;
 	}
 	
+	
+	public Map<String, Object> getLogsByDateRange(Date startDate, Date endDate) throws IOException{
+		
+		Map<String, Object> results = new HashMap<>();
+		
+		SearchRequest searchRequest = new SearchRequest("default_log_index");
+	    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+	    RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("@timestamp")
+	            .gte(startDate.getTime())
+	            .lte(endDate.getTime());
+
+	    searchSourceBuilder.query(rangeQuery);
+	    searchRequest.source(searchSourceBuilder);
+
+	    SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
+		
+	    results.put("totalHits", searchResponse.getHits().getTotalHits().value);
+	    
+	    results.put("logs", Arrays.stream(searchResponse.getHits().getHits())
+	            .map(SearchHit::getSourceAsMap)
+	            .collect(Collectors.toList()));
+	    
+		return results;
+	}
 	
 
 }

@@ -1,6 +1,7 @@
 package com.log.analysis.elasticsearch.controller;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,4 +47,15 @@ public class AggregationController {
 		}
 	}
 
+	@GetMapping("/logs-date-range")
+	public ResponseEntity<List<String>> getLogsDateRange(){
+		try {
+			List<String> results = aggs.getDateRangeOfLogs();
+			return new ResponseEntity<List<String>>(results,HttpStatus.OK);
+		} catch (IOException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 }

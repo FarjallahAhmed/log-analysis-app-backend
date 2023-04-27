@@ -1,12 +1,14 @@
 package com.log.analysis.elasticsearch.controller;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
-
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -92,5 +94,33 @@ public class GetDataController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	
+	@GetMapping("filter/logs-by-date-range")
+	public ResponseEntity<Map<String, Object>> getLogsByDateRange(
+	        @RequestParam(name = "start-date") @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+	        @RequestParam(name = "end-date") @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) throws IOException {
+		
+		Map<String, Object> response = filterLogsService.getLogsByDateRange(startDate, endDate);
+		
+		return new ResponseEntity<>(response,HttpStatus.OK);
+		
+	}
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
