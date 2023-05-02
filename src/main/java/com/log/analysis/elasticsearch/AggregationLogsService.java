@@ -18,7 +18,8 @@ import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBu
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.metrics.Max;
 import org.elasticsearch.search.aggregations.metrics.Min;
-
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 
 
 import java.io.IOException;
@@ -30,6 +31,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.awt.Color;
+import java.io.*;
+import java.text.SimpleDateFormat;
+
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
+import java.io.FileOutputStream;
+import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 
 
 
@@ -208,15 +223,62 @@ public class AggregationLogsService {
 	    return summary;
 	}
 
-
-
-
-
-
-
-
-
-
+    
+    public  void generateReport(Map<String, Object> logData) {
+        try {
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream("LogReport.pdf"));
+            document.open();
+            
+            // Add title
+            Paragraph title = new Paragraph("Log Report");
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph("\n"));
+            
+            // Add table for log data
+            PdfPTable table = new PdfPTable(2);
+            table.setWidthPercentage(100);
+            table.addCell(new PdfPCell(new Paragraph("Total Logs")));
+            table.addCell(new PdfPCell(new Paragraph(logData.get("totalLogs").toString())));
+            table.addCell(new PdfPCell(new Paragraph("Stack Trace Logs")));
+            table.addCell(new PdfPCell(new Paragraph(logData.get("stackTraceLogs").toString())));
+            table.addCell(new PdfPCell(new Paragraph("Latest Date")));
+            table.addCell(new PdfPCell(new Paragraph(logData.get("latestDate").toString())));
+            table.addCell(new PdfPCell(new Paragraph("Earliest Date")));
+            table.addCell(new PdfPCell(new Paragraph(logData.get("earliestDate").toString())));
+            table.addCell(new PdfPCell(new Paragraph("Error Logs")));
+            table.addCell(new PdfPCell(new Paragraph(logData.get("errorLogs").toString())));
+            table.addCell(new PdfPCell(new Paragraph("Top Loggers")));
+            @SuppressWarnings("unchecked")
+            List<String> topLoggers = (List<String>) logData.get("topLoggers");
+            StringBuilder topLoggersStr = new StringBuilder();
+            for (String logger : topLoggers) {
+                topLoggersStr.append(logger).append(", ");
+            }
+            topLoggersStr.delete(topLoggersStr.length() - 2, topLoggersStr.length());
+            table.addCell(new PdfPCell(new Paragraph(topLoggersStr.toString())));
+            StringBuilder logLevelPercentages = new StringBuilder();
+            for (String level : ((Map<String, Double>) logData.get("logLevelPercentages")).keySet()) {
+                logLevelPercentages.append(level).append(": ")
+                        .append(String.format("%.2f", ((Map<String, Double>) logData.get("logLevelPercentages")).get(level)))
+                        .append("%, ");
+            }
+            logLevelPercentages.delete(logLevelPercentages.length() - 2, logLevelPercentages.length());
+            table.addCell(new PdfPCell(new Paragraph(logLevelPercentages.toString())));
+            table.addCell(new PdfPCell(new Paragraph("Error Message Percentages")));
+            for (String message : ((Map<String, Double>) logData.get("errorMessagePercentages")).keySet()) {
+                table.addCell(new PdfPCell(new Paragraph(message)));
+                //table.addCell(new PdfPCell(new Paragraph(String.format("%.2f", ((Map<String, Double>) logData.get("errorMessagePercentages")).get(message) + "%"))));
+            }
+            document.add(table);
+            
+            document.close();
+            System.out.println("Report generated successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
