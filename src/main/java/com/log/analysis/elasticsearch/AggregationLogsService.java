@@ -12,14 +12,23 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.metrics.Max;
 import org.elasticsearch.search.aggregations.metrics.Min;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 
 
 import java.io.IOException;
@@ -31,20 +40,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.awt.Color;
-import java.io.*;
-import java.text.SimpleDateFormat;
-
-
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
 import java.io.FileOutputStream;
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
+
+
 
 
 
@@ -57,12 +55,16 @@ public class AggregationLogsService {
 	@Autowired
 	private RestHighLevelClient client;
 	
+	private static final Font TITLE_FONT = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+    private static final Font SUBTITLE_FONT = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
+    private static final Font TEXT_FONT = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
 	
-	public Map<String, Long> getLogsPerMonth() throws IOException{
+	
+	public Map<String, Long> getLogsPerMonth(String index) throws IOException{
 		
 		Map<String, Long> results = new HashMap<>();
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
 		searchSourceBuilder.size(0);
@@ -89,11 +91,11 @@ public class AggregationLogsService {
 		return results;
 	}
 
-	public Map<String,Long> getTopMessage() throws IOException{
+	public Map<String,Long> getTopMessage(String index) throws IOException{
 		
 		Map<String, Long> messageCount = new HashMap<>(); 
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
 		searchSourceBuilder.size(0);
@@ -117,11 +119,11 @@ public class AggregationLogsService {
 		return messageCount;
 	}
 
-	public List<String> getDateRangeOfLogs() throws IOException {
+	public List<String> getDateRangeOfLogs(String index) throws IOException {
 		
 		List<String> result = new ArrayList<>();
 		
-        SearchRequest searchRequest = new SearchRequest("default_log_index");
+        SearchRequest searchRequest = new SearchRequest(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(QueryBuilders.matchAllQuery());
         DateRangeAggregationBuilder dateRangeAggregationBuilder = AggregationBuilders.dateRange("date_range")
@@ -144,32 +146,33 @@ public class AggregationLogsService {
         return result;
     }
 	
-	public Map<String, Object> generateSummary() throws IOException {
+	
+	public Map<String, Object> generateSummary(String index) throws IOException {
 
 	    Map<String, Object> summary = new HashMap<>();
 	
 	    // Get total count of logs
-	    SearchRequest countRequest = new SearchRequest("default_log_index");
+	    SearchRequest countRequest = new SearchRequest(index);
 	    countRequest.source(new SearchSourceBuilder().size(0).query(QueryBuilders.matchAllQuery()));
 	    SearchResponse countResponse = client.search(countRequest, RequestOptions.DEFAULT);
 	    long totalLogs = countResponse.getHits().getTotalHits().value;
 	    summary.put("totalLogs", totalLogs);
 	
 	    // Get count of logs with error messages
-	    SearchRequest errorRequest = new SearchRequest("default_log_index");
+	    SearchRequest errorRequest = new SearchRequest(index);
 	    errorRequest.source(new SearchSourceBuilder().size(0).query(QueryBuilders.existsQuery("ErrorMessage")));
 	    SearchResponse errorResponse = client.search(errorRequest, RequestOptions.DEFAULT);
 	    long errorLogs = errorResponse.getHits().getTotalHits().value;
 	    summary.put("errorLogs", errorLogs);
 	
 	    // Get count of logs with stack traces
-	    SearchRequest stackTraceRequest = new SearchRequest("default_log_index");
+	    SearchRequest stackTraceRequest = new SearchRequest(index);
 	    stackTraceRequest.source(new SearchSourceBuilder().size(0).query(QueryBuilders.existsQuery("StackTrace")));
 	    SearchResponse stackTraceResponse = client.search(stackTraceRequest, RequestOptions.DEFAULT);
 	    summary.put("stackTraceLogs", stackTraceResponse.getHits().getTotalHits().value);
 	
 	    // Get top 5 loggers by count
-	    SearchRequest loggerRequest = new SearchRequest("default_log_index");
+	    SearchRequest loggerRequest = new SearchRequest(index);
 	    loggerRequest.source(new SearchSourceBuilder().size(0)
 	            .aggregation(AggregationBuilders.terms("topLoggers").field("logger").size(5)));
 	    SearchResponse loggerResponse = client.search(loggerRequest, RequestOptions.DEFAULT);
@@ -178,7 +181,7 @@ public class AggregationLogsService {
 	    summary.put("topLoggers", topLoggers);
 	
 	    // Get earliest and latest log dates
-	    SearchRequest dateRequest = new SearchRequest("default_log_index");
+	    SearchRequest dateRequest = new SearchRequest(index);
 	    dateRequest.source(new SearchSourceBuilder().size(0)
 	            .aggregation(AggregationBuilders.min("earliestDate").field("log_date"))
 	            .aggregation(AggregationBuilders.max("latestDate").field("log_date")));
@@ -191,7 +194,7 @@ public class AggregationLogsService {
 	    summary.put("latestDate", latestDate);
 	    
 	 // Get count of logs with each log level
-	    SearchRequest logLevelRequest = new SearchRequest("default_log_index");
+	    SearchRequest logLevelRequest = new SearchRequest(index);
 	    logLevelRequest.source(new SearchSourceBuilder().size(0)
 	            .aggregation(AggregationBuilders.terms("logLevels").field("loglevel"))
 	            .query(QueryBuilders.existsQuery("loglevel")));
@@ -207,13 +210,14 @@ public class AggregationLogsService {
 	    summary.put("logLevelPercentages", logLevelPercentages);
 
 	    // Get count of logs with each error message
-	    SearchRequest errorMessageRequest = new SearchRequest("default_log_index");
+	    SearchRequest errorMessageRequest = new SearchRequest(index);
 	    errorMessageRequest.source(new SearchSourceBuilder().size(0)
 	            .aggregation(AggregationBuilders.terms("errorMessages").field("ErrorMessage.keyword").size(10))
 	            .query(QueryBuilders.existsQuery("ErrorMessage")));
 	    SearchResponse errorMessageResponse = client.search(errorMessageRequest, RequestOptions.DEFAULT);
 	    Map<String, Long> errorMessageCounts = ((Terms) errorMessageResponse.getAggregations().get("errorMessages")).getBuckets()
 	            .stream().collect(Collectors.toMap(Terms.Bucket::getKeyAsString, Terms.Bucket::getDocCount));
+	    
 	    Map<String, Double> errorMessagePercentages = new HashMap<>();
 	    for (Map.Entry<String, Long> entry : errorMessageCounts.entrySet()) {
 	        errorMessagePercentages.put(entry.getKey(), ((double) entry.getValue() / totalLogs) * 100);
@@ -223,63 +227,74 @@ public class AggregationLogsService {
 	    return summary;
 	}
 
+    @SuppressWarnings("unchecked")
+	public void generateReportPDF(Map<String, Object> logAnalysisReport, String filePath) throws DocumentException, IOException {
     
-    public  void generateReport(Map<String, Object> logData) {
-        try {
-            Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream("LogReport.pdf"));
-            document.open();
-            
-            // Add title
-            Paragraph title = new Paragraph("Log Report");
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-            document.add(new Paragraph("\n"));
-            
-            // Add table for log data
-            PdfPTable table = new PdfPTable(2);
-            table.setWidthPercentage(100);
-            table.addCell(new PdfPCell(new Paragraph("Total Logs")));
-            table.addCell(new PdfPCell(new Paragraph(logData.get("totalLogs").toString())));
-            table.addCell(new PdfPCell(new Paragraph("Stack Trace Logs")));
-            table.addCell(new PdfPCell(new Paragraph(logData.get("stackTraceLogs").toString())));
-            table.addCell(new PdfPCell(new Paragraph("Latest Date")));
-            table.addCell(new PdfPCell(new Paragraph(logData.get("latestDate").toString())));
-            table.addCell(new PdfPCell(new Paragraph("Earliest Date")));
-            table.addCell(new PdfPCell(new Paragraph(logData.get("earliestDate").toString())));
-            table.addCell(new PdfPCell(new Paragraph("Error Logs")));
-            table.addCell(new PdfPCell(new Paragraph(logData.get("errorLogs").toString())));
-            table.addCell(new PdfPCell(new Paragraph("Top Loggers")));
-            @SuppressWarnings("unchecked")
-            List<String> topLoggers = (List<String>) logData.get("topLoggers");
-            StringBuilder topLoggersStr = new StringBuilder();
-            for (String logger : topLoggers) {
-                topLoggersStr.append(logger).append(", ");
-            }
-            topLoggersStr.delete(topLoggersStr.length() - 2, topLoggersStr.length());
-            table.addCell(new PdfPCell(new Paragraph(topLoggersStr.toString())));
-            StringBuilder logLevelPercentages = new StringBuilder();
-            for (String level : ((Map<String, Double>) logData.get("logLevelPercentages")).keySet()) {
-                logLevelPercentages.append(level).append(": ")
-                        .append(String.format("%.2f", ((Map<String, Double>) logData.get("logLevelPercentages")).get(level)))
-                        .append("%, ");
-            }
-            logLevelPercentages.delete(logLevelPercentages.length() - 2, logLevelPercentages.length());
-            table.addCell(new PdfPCell(new Paragraph(logLevelPercentages.toString())));
-            table.addCell(new PdfPCell(new Paragraph("Error Message Percentages")));
-            for (String message : ((Map<String, Double>) logData.get("errorMessagePercentages")).keySet()) {
-                table.addCell(new PdfPCell(new Paragraph(message)));
-                //table.addCell(new PdfPCell(new Paragraph(String.format("%.2f", ((Map<String, Double>) logData.get("errorMessagePercentages")).get(message) + "%"))));
-            }
-            document.add(table);
-            
-            document.close();
-            System.out.println("Report generated successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	    FileOutputStream outputStream = new FileOutputStream(filePath);
+	    Document document = new Document();
+	    PdfWriter.getInstance(document, outputStream);
+	    document.open();
+	
+	    // Add Title
+	    Paragraph title = new Paragraph("Log Analysis Report", TITLE_FONT);
+	    title.setAlignment(Element.ALIGN_CENTER);
+	    document.add(title);
+	
+	    // Add Total Logs
+	    int totalLogs = (int) logAnalysisReport.get("totalLogs");
+	    Paragraph totalLogsParagraph = new Paragraph("Total Logs: " + totalLogs, SUBTITLE_FONT);
+	    document.add(totalLogsParagraph);
+	
+	    // Add Stack Trace Logs
+	    int stackTraceLogs = (int) logAnalysisReport.get("stackTraceLogs");
+	    Paragraph stackTraceLogsParagraph = new Paragraph("Exception: " + stackTraceLogs, SUBTITLE_FONT);
+	    document.add(stackTraceLogsParagraph);
+	
+	    // Add Latest Date
+	    String latestDate = (String) logAnalysisReport.get("latestDate");
+	    Paragraph latestDateParagraph = new Paragraph("Latest log: " + latestDate, SUBTITLE_FONT);
+	    document.add(latestDateParagraph);
+	
+	    // Add Earliest Date
+	    String earliestDate = (String) logAnalysisReport.get("earliestDate");
+	    Paragraph earliestDateParagraph = new Paragraph("Earliest log: " + earliestDate, SUBTITLE_FONT);
+	    document.add(earliestDateParagraph);
+	
+	
+	    // Add Log Level Percentages
+	    Map<String, Double> logLevelPercentages = (Map<String, Double>) logAnalysisReport.get("logLevelPercentages");
+	    Paragraph logLevelParagraph = new Paragraph("Log Level Percentages: ", SUBTITLE_FONT);
+	    logLevelParagraph.setSpacingBefore(10);
+	    logLevelParagraph.setSpacingAfter(10);
+	    document.add(logLevelParagraph);
+	    PdfPTable logLevelTable = new PdfPTable(2);
+	    for (Map.Entry<String, Double> entry : logLevelPercentages.entrySet()) {
+	        PdfPCell logLevelCell1 = new PdfPCell(new Phrase(entry.getKey(), TEXT_FONT));
+	        PdfPCell logLevelCell2 = new PdfPCell(new Phrase(entry.getValue() + "%", TEXT_FONT));
+	        logLevelTable.addCell(logLevelCell1);
+	        logLevelTable.addCell(logLevelCell2);
+	    }
+	    document.add(logLevelTable);
+	
+	    // Add Error Message Percentages
+	    Map<String, Double> errorMessagePercentages = (Map<String, Double>) logAnalysisReport.get("errorMessagePercentages");
+	    Paragraph errorMessageParagraph = new Paragraph("Error Message Percentages: ", SUBTITLE_FONT);
+	    errorMessageParagraph.setSpacingBefore(10);
+	    errorMessageParagraph.setSpacingAfter(10);
+	    document.add(errorMessageParagraph);
+	    PdfPTable errorMessageTable = new PdfPTable(2);
+	    for (Map.Entry<String, Double> entry : errorMessagePercentages.entrySet()) {
+	        PdfPCell errorMessageCell1 = new PdfPCell(new Phrase(entry.getKey(), TEXT_FONT));
+	        PdfPCell errorMessageCell2 = new PdfPCell(new Phrase(entry.getValue() + "%", TEXT_FONT));
+	        errorMessageTable.addCell(errorMessageCell1);
+	        errorMessageTable.addCell(errorMessageCell2);
+	    }
+	    document.add(errorMessageTable);
+	
+	    document.close();
+	    outputStream.close();
+	}
 
-
-
+    
+    
 }

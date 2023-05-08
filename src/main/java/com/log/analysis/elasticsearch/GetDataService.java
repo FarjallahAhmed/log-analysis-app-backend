@@ -31,11 +31,11 @@ public class GetDataService {
 	private RestHighLevelClient restClient;
 
 	
-	public List<ExceptionDefault> getLogsWithSpecificMessage(String errorMessage) throws IOException {
+	public List<ExceptionDefault> getLogsWithSpecificMessage(String errorMessage, String index) throws IOException {
 		
 		List<ExceptionDefault> logs = new ArrayList<>();
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
 		searchSourceBuilder.query(QueryBuilders.matchQuery("ErrorMessage", errorMessage));
@@ -68,9 +68,9 @@ public class GetDataService {
 		return logs;
 	}
 	
-	public Page<Default> getSimpleLogs(Pageable pageable) throws IOException {
+	public Page<Default> getSimpleLogs(Pageable pageable,String index) throws IOException {
 
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 		searchSourceBuilder.query(QueryBuilders.matchAllQuery());
@@ -109,9 +109,9 @@ public class GetDataService {
 		return new PageImpl<>(simpleLogs, pageable, simpleLogs.size());
 	}
 
-	public Page<ExceptionDefault> getExceptionLogs(Pageable pageable) throws IOException {
+	public Page<ExceptionDefault> getExceptionLogs(Pageable pageable,String index) throws IOException {
 
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 		searchSourceBuilder.query(QueryBuilders.matchAllQuery());

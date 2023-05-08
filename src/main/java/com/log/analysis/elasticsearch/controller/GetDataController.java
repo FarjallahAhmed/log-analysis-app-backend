@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,10 +36,10 @@ public class GetDataController {
 	private FilterLogsService filterLogsService;
 	
 	
-	@GetMapping(path = "simplelogs")
-	public ResponseEntity<Page<Default>> getDefaultSimpleLogs(Pageable pageable){
+	@GetMapping(path = "simplelogs/{index}")
+	public ResponseEntity<Page<Default>> getDefaultSimpleLogs(Pageable pageable,@PathVariable("index") String index){
 		try {
-			Page<Default> myDataList = getDataService.getSimpleLogs(pageable);
+			Page<Default> myDataList = getDataService.getSimpleLogs(pageable,index);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -46,10 +47,10 @@ public class GetDataController {
 		}
 	}
 	
-	@GetMapping(path = "exceptionlogs")
-	public ResponseEntity<Page<ExceptionDefault>> getDefaultExceptionogs(Pageable pageable){
+	@GetMapping(path = "exceptionlogs/{index}")
+	public ResponseEntity<Page<ExceptionDefault>> getDefaultExceptionogs(Pageable pageable,@PathVariable("index") String index){
 		try {
-			Page<ExceptionDefault> myDataList = getDataService.getExceptionLogs(pageable);
+			Page<ExceptionDefault> myDataList = getDataService.getExceptionLogs(pageable,index);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -58,11 +59,11 @@ public class GetDataController {
 	}
 	
 	
-	@GetMapping("filter/errormessage")
-	public ResponseEntity<List<ExceptionDefault>> filterErrorException(@RequestParam("errorMessage") String errorMessage){
+	@GetMapping("filter/errormessage/{index}")
+	public ResponseEntity<List<ExceptionDefault>> filterErrorException(@RequestParam("errorMessage") String errorMessage,@PathVariable("index") String index){
 	
 		try {
-			List<ExceptionDefault> myDataList = getDataService.getLogsWithSpecificMessage(errorMessage);
+			List<ExceptionDefault> myDataList = getDataService.getLogsWithSpecificMessage(errorMessage,index);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
