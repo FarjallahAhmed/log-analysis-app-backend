@@ -33,11 +33,11 @@ public class FilterLogsService {
 	RestHighLevelClient restClient;
 	
 	
-	public List<Default> filterDefaultWithLogLevel(String level) throws IOException{
+	public List<Default> filterDefaultWithLogLevel(String level,String index) throws IOException{
 		
 		List<Default> logs = new ArrayList<>();
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
 		searchSourceBuilder.query(QueryBuilders.matchQuery("loglevel",level));
@@ -72,10 +72,10 @@ public class FilterLogsService {
 	
 	
 	
-	public List<Default> filterLogsByMessageKeyword (String message) throws IOException{
+	public List<Default> filterLogsByMessageKeyword (String message,String index) throws IOException{
 		List<Default> logs = new ArrayList<>();
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 		
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
@@ -108,11 +108,11 @@ public class FilterLogsService {
 	}
 	
 	
-	public Map<String, Object> getLogsByDateRange(Date startDate, Date endDate) throws IOException{
+	public Map<String, Object> getLogsByDateRange(Date startDate, Date endDate, String index) throws IOException{
 		
 		Map<String, Object> results = new HashMap<>();
 		
-		SearchRequest searchRequest = new SearchRequest("default_log_index");
+		SearchRequest searchRequest = new SearchRequest(index);
 	    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 	    RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("@timestamp")
@@ -124,10 +124,12 @@ public class FilterLogsService {
 	            .must(QueryBuilders.existsQuery("log_date"));
 
 	    searchSourceBuilder.query(boolQuery);
+	    searchSourceBuilder.size(10000);
+	    
 	    searchRequest.source(searchSourceBuilder);
-
+	    
 	    SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
-		
+	    
 	    results.put("totalHits", searchResponse.getHits().getTotalHits().value);
 	    
 	    results.put("logs", Arrays.stream(searchResponse.getHits().getHits())

@@ -71,11 +71,11 @@ public class GetDataController {
 		}
 	}
 	
-	@GetMapping("filter/loglevel")
-	public ResponseEntity<List<Default>> filterLogLevel(@RequestParam("loglevel") String loglevel){
+	@GetMapping("filter/loglevel/{index}")
+	public ResponseEntity<List<Default>> filterLogLevel(@RequestParam("loglevel") String loglevel,@PathVariable("index") String index){
 	
 		try {
-			List<Default> myDataList = filterLogsService.filterDefaultWithLogLevel(loglevel);
+			List<Default> myDataList = filterLogsService.filterDefaultWithLogLevel(loglevel,index);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -84,11 +84,11 @@ public class GetDataController {
 	}
 	
 	
-	@GetMapping("filter/logmessage")
-	public ResponseEntity<List<Default>> filterLogByMessage(@RequestParam("logmessage") String logmessage){
+	@GetMapping("filter/logmessage/{index}")
+	public ResponseEntity<List<Default>> filterLogByMessage(@RequestParam("logmessage") String logmessage, @PathVariable("index") String index){
 	
 		try {
-			List<Default> myDataList = filterLogsService.filterLogsByMessageKeyword(logmessage);
+			List<Default> myDataList = filterLogsService.filterLogsByMessageKeyword(logmessage,index);
 			return new ResponseEntity<> (myDataList,HttpStatus.OK);
 		}catch (IOException e) {
 			e.printStackTrace();
@@ -97,12 +97,13 @@ public class GetDataController {
 	}
 	
 	
-	@GetMapping("filter/logs-by-date-range")
+	@GetMapping("filter/logs-by-date-range/{index}")
 	public ResponseEntity<Map<String, Object>> getLogsByDateRange(
 	        @RequestParam(name = "start-date") @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-	        @RequestParam(name = "end-date") @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) throws IOException {
+	        @RequestParam(name = "end-date") @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+	        @PathVariable("index") String index) throws IOException {
 		
-		Map<String, Object> response = filterLogsService.getLogsByDateRange(startDate, endDate);
+		Map<String, Object> response = filterLogsService.getLogsByDateRange(startDate, endDate, index);
 		
 		return new ResponseEntity<>(response,HttpStatus.OK);
 		
