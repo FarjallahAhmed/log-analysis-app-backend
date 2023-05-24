@@ -141,5 +141,47 @@ public class GetDataService {
 		}
 		return new PageImpl<>(exceptionLogs, pageable, exceptionLogs.size());
 	}
+	
+	
+	
+	public List<Default> getLogs(String index) throws IOException {
+
+		SearchRequest searchRequest = new SearchRequest(index);
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+		searchSourceBuilder.size(10000);
+		searchRequest.source(searchSourceBuilder);
+
+		SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
+
+		SearchHits hits = searchResponse.getHits();
+
+		List<Default> simpleLogs = new ArrayList<>();
+
+		for (SearchHit hit : hits) {
+
+			Default logs = new Default();
+
+			// Check if "loglevel" and "logger" keys exist and if they're not null before
+			// accessing them
+			if (hit.getSourceAsMap().containsKey("loglevel") && hit.getSourceAsMap().get("loglevel") != null
+					&& hit.getSourceAsMap().containsKey("logger") && hit.getSourceAsMap().get("logger") != null) {
+
+				logs.setLogger(hit.getSourceAsMap().get("logger").toString());
+				logs.setLoglevel(hit.getSourceAsMap().get("loglevel").toString());
+				logs.setDay(hit.getSourceAsMap().get("day").toString());
+				logs.setMonth(hit.getSourceAsMap().get("month").toString());
+				logs.setYear(hit.getSourceAsMap().get("year").toString());
+				logs.setLogDate(hit.getSourceAsMap().get("log_date").toString());
+				logs.setLogMessage(hit.getSourceAsMap().get("logmessage").toString());
+				logs.setPackagee(hit.getSourceAsMap().get("package").toString());
+				logs.setThreadName(hit.getSourceAsMap().get("threadname").toString());
+				simpleLogs.add(logs);
+			}
+
+		}
+		return simpleLogs;
+	}
 
 }

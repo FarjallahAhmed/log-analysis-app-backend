@@ -2,6 +2,9 @@ package com.log.analysis.logstash;
 
 
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,5 +29,36 @@ public class LogstashController {
 		lds.loadDataFromPathFile(pathFile,pattern,logstashFile);
 		
 	}
+	
+	
+	@PostMapping("/start-logstash")
+	public void startLogstash() {
+	  try {
+	    ProcessBuilder processBuilder = new ProcessBuilder("C:/Elastic stack/logstash/bin/logstash.bat");/*, "-f", "C:/Elastic stack/logstash/testlog.conf")*/;
+	    processBuilder.redirectErrorStream(true); // Redirect the error stream to the output stream
+	    Process process = processBuilder.start();
+
+	    // Read the process output
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	    String line;
+
+	    while ((line = reader.readLine()) != null) {
+	      System.out.println(line);
+	    }
+
+	    int exitCode = process.waitFor(); // Wait for the process to finish
+	    if (exitCode == 0) {
+	      System.out.println("Logstash process exited successfully.");
+	    } else {
+	      System.out.println("Logstash process exited with an error: " + exitCode);
+	    }
+
+	  } catch (Exception e) {
+	    e.printStackTrace();
+	    // Handle the exception as needed
+	  }
+	}
+
+
 
 }
