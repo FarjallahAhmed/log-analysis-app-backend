@@ -1,14 +1,13 @@
 package com.log.analysis.alerting.controller;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.log.analysis.alerting.repository.AlertConfigurationRepository;
+import com.log.analysis.alerting.service.AlertConfigurationService;
 import com.log.analysis.elasticsearch.GetDataService;
 import com.log.analysis.elasticsearch.model.AlertConfiguration;
 import com.log.analysis.elasticsearch.model.Default;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/alert-configurations")
 public class AlertConfigurationController {
 
@@ -42,20 +43,19 @@ public class AlertConfigurationController {
 
     @PostMapping
     public ResponseEntity<AlertConfiguration> createAlertConfiguration(@RequestBody AlertConfiguration alertConfiguration) {
-        AlertConfiguration savedAlertConfiguration = alertConfigurationRepository.save(alertConfiguration);
+        AlertConfiguration savedAlertConfiguration = alertConfigurationService.createAlertConfiguration(alertConfiguration);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedAlertConfiguration);
     }
 
     @GetMapping
     public ResponseEntity<List<AlertConfiguration>> getAllAlertConfigurations() {
-        List<AlertConfiguration> alertConfigurations = alertConfigurationRepository.findAll();
+        List<AlertConfiguration> alertConfigurations = alertConfigurationService.getAllAlertConfigurations();
         return ResponseEntity.ok(alertConfigurations);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AlertConfiguration> getAlertConfigurationById(@PathVariable Long id) {
-        AlertConfiguration alertConfiguration = alertConfigurationRepository.findById(id)
-                .orElse(null);
+        AlertConfiguration alertConfiguration = alertConfigurationService.getAlertConfigurationById(id);
         if (alertConfiguration != null) {
             return ResponseEntity.ok(alertConfiguration);
         } else {
@@ -65,13 +65,9 @@ public class AlertConfigurationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AlertConfiguration> updateAlertConfiguration(@PathVariable Long id, @RequestBody AlertConfiguration updatedAlertConfiguration) {
-        AlertConfiguration alertConfiguration = alertConfigurationRepository.findById(id)
-                .orElse(null);
+        AlertConfiguration alertConfiguration = alertConfigurationService.updateAlertConfiguration(id, updatedAlertConfiguration);
         if (alertConfiguration != null) {
-            alertConfiguration.setStatus(updatedAlertConfiguration.getStatus());
-            // Update other fields as needed
-            AlertConfiguration savedAlertConfiguration = alertConfigurationRepository.save(alertConfiguration);
-            return ResponseEntity.ok(savedAlertConfiguration);
+            return ResponseEntity.ok(alertConfiguration);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -79,8 +75,8 @@ public class AlertConfigurationController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAlertConfiguration(@PathVariable Long id) {
-        if (alertConfigurationRepository.existsById(id)) {
-            alertConfigurationRepository.deleteById(id);
+        boolean deleted = alertConfigurationService.deleteAlertConfiguration(id);
+        if (deleted) {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.notFound().build();

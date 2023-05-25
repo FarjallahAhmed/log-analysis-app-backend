@@ -1,4 +1,4 @@
-package com.log.analysis.alerting.controller;
+package com.log.analysis.alerting.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,16 +9,46 @@ import org.springframework.stereotype.Service;
 import com.log.analysis.alerting.repository.AlertConfigurationRepository;
 import com.log.analysis.elasticsearch.model.AlertConfiguration;
 import com.log.analysis.elasticsearch.model.Default;
-import com.log.analysis.elasticsearch.model.ExceptionDefault;
 
 @Service
 public class AlertConfigurationService {
 	
-	@Autowired
-	private  AlertConfigurationRepository alertConfigurationRepository;
-    
+	private final AlertConfigurationRepository alertConfigurationRepository;
 
-   
+    @Autowired
+    public AlertConfigurationService(AlertConfigurationRepository alertConfigurationRepository) {
+        this.alertConfigurationRepository = alertConfigurationRepository;
+    }
+
+    public AlertConfiguration createAlertConfiguration(AlertConfiguration alertConfiguration) {
+        return alertConfigurationRepository.save(alertConfiguration);
+    }
+
+    public List<AlertConfiguration> getAllAlertConfigurations() {
+        return alertConfigurationRepository.findAll();
+    }
+
+    public AlertConfiguration getAlertConfigurationById(Long id) {
+        return alertConfigurationRepository.findById(id).orElse(null);
+    }
+
+    public AlertConfiguration updateAlertConfiguration(Long id, AlertConfiguration updatedAlertConfiguration) {
+        AlertConfiguration alertConfiguration = alertConfigurationRepository.findById(id).orElse(null);
+        if (alertConfiguration != null) {
+            alertConfiguration.setStatus(updatedAlertConfiguration.getStatus());
+            // Update other fields as needed
+            return alertConfigurationRepository.save(alertConfiguration);
+        }
+        return null;
+    }
+
+    public boolean deleteAlertConfiguration(Long id) {
+        if (alertConfigurationRepository.existsById(id)) {
+            alertConfigurationRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 	
 	public List<Default> getRelevantLogs(AlertConfiguration alertConfiguration, List<Default> logDataList) {
 	    List<Default> relevantLogs = new ArrayList<>();

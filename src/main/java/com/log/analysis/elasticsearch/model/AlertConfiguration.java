@@ -25,6 +25,8 @@ public class AlertConfiguration {
     private int thresholdValue;
     private String alertDescription;
     private Boolean status;
+    private String notificationChannel;
+    private String escalationLevel;
 
 
 }
