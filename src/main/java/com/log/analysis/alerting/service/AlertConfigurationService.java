@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import com.log.analysis.alerting.repository.AlertConfigurationRepository;
@@ -15,10 +17,13 @@ import com.log.analysis.elasticsearch.model.ExceptionDefault;
 public class AlertConfigurationService {
 	
 	private final AlertConfigurationRepository alertConfigurationRepository;
+	private final JavaMailSender mailSender;
 
     @Autowired
-    public AlertConfigurationService(AlertConfigurationRepository alertConfigurationRepository) {
+    public AlertConfigurationService(AlertConfigurationRepository alertConfigurationRepository,
+    								JavaMailSender mailSender) {
         this.alertConfigurationRepository = alertConfigurationRepository;
+        this.mailSender = mailSender;
     }
 
     public AlertConfiguration createAlertConfiguration(AlertConfiguration alertConfiguration) {
@@ -81,17 +86,21 @@ public class AlertConfigurationService {
 
 	
 	public  boolean evaluateConditions(AlertConfiguration alertConfiguration, List<?> relevantLogs) {
-	    // Implement your specific logic to evaluate conditions and criteria for triggering alerts
-	    // For example, check the number of relevant logs, their timestamps, or any other relevant conditions
-
-	    // Example logic for demonstration purposes:
-	    int logCount = relevantLogs.size();
+	    
+		int logCount = relevantLogs.size();
 	    int thresholdValue = alertConfiguration.getThresholdValue();
 
-	    // Trigger the alert if the log count exceeds the threshold value
 	    return logCount > thresholdValue;
 	}
 	
+	public void sendEmailNotification(String recipientEmail, String subject, String content) {
+		
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(recipientEmail);
+        message.setSubject(subject);
+        message.setText(content);
+        mailSender.send(message);
+    }
 	
 	
 	

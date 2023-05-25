@@ -98,7 +98,13 @@ public class AlertConfigurationController {
         		List<Default> relevantLogs = this.alertConfigurationService.getRelevantLogs(logs);
         		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
         		if (isAlertTriggered) {
-                	System.out.println("start notifications logs");
+        			
+        			System.out.println("start notifications logs");
+        			String recipientEmail = "pfepfetest@gmail.com";
+        	        String subject = "Alert Triggered";
+        	        String content = "alert of the logs ERROR.";
+        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content);
+             
                 }
         	}
         	else if (alertConfiguration.getTriggerCondition().equals("exception")) {
@@ -106,7 +112,13 @@ public class AlertConfigurationController {
         		List<ExceptionDefault> relevantLogs = this.alertConfigurationService.getRelevantException(alertConfiguration.getTimeWindow(),exception);
         		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
         		if (isAlertTriggered) {
-                	System.out.println("start notifications exception");
+        			
+        			System.out.println("start notifications exception");
+        			String recipientEmail = "pfepfetest@gmail.com";
+        	        String subject = "Alert Triggered";
+        	        String content = "alert of the exception.";
+        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content);
+                	
                 }
         	}
 
