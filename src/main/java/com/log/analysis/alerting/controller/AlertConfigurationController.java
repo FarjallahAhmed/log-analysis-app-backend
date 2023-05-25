@@ -22,6 +22,7 @@ import com.log.analysis.alerting.service.AlertConfigurationService;
 import com.log.analysis.elasticsearch.GetDataService;
 import com.log.analysis.elasticsearch.model.AlertConfiguration;
 import com.log.analysis.elasticsearch.model.Default;
+import com.log.analysis.elasticsearch.model.ExceptionDefault;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -87,24 +88,28 @@ public class AlertConfigurationController {
     public ResponseEntity<List<Default>> triggerAlert() throws IOException {
     	
         List<AlertConfiguration> alertConfigurations = alertConfigurationRepository.findAll();
-        List<Default> logData = this.getService.getLogs("default_log_index");
+        List<Default> logs = this.getService.getLogs("default_log_index");
+        List<ExceptionDefault> exception = this.getService.getException("default_log_index");
         
-
      // Iterate through the alert configurations
         for (AlertConfiguration alertConfiguration : alertConfigurations) {
-            // Retrieve the relevant log data based on the trigger condition
-            List<Default> relevantLogs = this.alertConfigurationService.getRelevantLogs(alertConfiguration, logData);
+        	if (alertConfiguration.getTriggerCondition().equals("logLevel")) {
+        		
+        		List<Default> relevantLogs = this.alertConfigurationService.getRelevantLogs(logs);
+        		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
+        		if (isAlertTriggered) {
+                	System.out.println("start notifications logs");
+                }
+        	}
+        	else if (alertConfiguration.getTriggerCondition().equals("exception")) {
+        		
+        		List<ExceptionDefault> relevantLogs = this.alertConfigurationService.getRelevantException(alertConfiguration.getTimeWindow(),exception);
+        		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
+        		if (isAlertTriggered) {
+                	System.out.println("start notifications exception");
+                }
+        	}
 
-            System.out.println(relevantLogs);
-            // Evaluate the conditions and criteria for triggering alerts
-            boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
-
-            if (isAlertTriggered) {
-            	System.out.println("start notifications");
-                // Perform actions to trigger the alert, such as sending a notification or logging the alert
-                /*sendNotification(alertConfiguration);
-                logAlert(alertConfiguration);*/
-            }
         }
 
         return new ResponseEntity<>(null, HttpStatus.OK);

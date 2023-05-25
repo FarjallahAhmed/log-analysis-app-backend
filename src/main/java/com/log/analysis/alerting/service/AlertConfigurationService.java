@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.log.analysis.alerting.repository.AlertConfigurationRepository;
 import com.log.analysis.elasticsearch.model.AlertConfiguration;
 import com.log.analysis.elasticsearch.model.Default;
+import com.log.analysis.elasticsearch.model.ExceptionDefault;
 
 @Service
 public class AlertConfigurationService {
@@ -50,32 +51,36 @@ public class AlertConfigurationService {
         return false;
     }
 	
-	public List<Default> getRelevantLogs(AlertConfiguration alertConfiguration, List<Default> logDataList) {
-	    List<Default> relevantLogs = new ArrayList<>();
-
-	    // Implement logic to filter log data based on the trigger condition of the alert configuration
-	    // For example, filter log data by log level or log pattern
-
-	    // Example logic for demonstration purposes:
+	public List<Default> getRelevantLogs(List<Default> logDataList) {
+		
+	    List<Default> relevantLogs = new ArrayList<>();	    
 	    for (Default logData : logDataList) {
-	        if (alertConfiguration.getTriggerCondition().equals("logLevel")) {
-	            // Filter log data by log level
+	    	
 	            if (logData.getLoglevel().equals("ERROR")) {
 	                relevantLogs.add(logData);
 	            }
-	        /*} else if (alertConfiguration.getTriggerCondition().equals("logPattern")) {
-	            // Filter log data by log pattern
-	            if (logData.getMessage().contains(alertConfiguration.getLogPattern())) {
-	                relevantLogs.add(logData);
-	            }*/
 	        }
+
+	    return relevantLogs;
+	}
+	
+	public List<ExceptionDefault> getRelevantException(String message, List<ExceptionDefault> logDataList) {
+		
+	    List<ExceptionDefault> relevantLogs = new ArrayList<>();
+	    
+	    
+	    for (ExceptionDefault logData : logDataList) {
+	    	
+	            if (logData.getErrorMessage().contains(message)) {
+	                relevantLogs.add(logData);
+	            }
 	    }
 
 	    return relevantLogs;
 	}
 
 	
-	public  boolean evaluateConditions(AlertConfiguration alertConfiguration, List<Default> relevantLogs) {
+	public  boolean evaluateConditions(AlertConfiguration alertConfiguration, List<?> relevantLogs) {
 	    // Implement your specific logic to evaluate conditions and criteria for triggering alerts
 	    // For example, check the number of relevant logs, their timestamps, or any other relevant conditions
 

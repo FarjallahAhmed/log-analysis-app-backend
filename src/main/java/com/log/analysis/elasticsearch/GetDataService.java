@@ -183,5 +183,38 @@ public class GetDataService {
 		}
 		return simpleLogs;
 	}
+	
+	
+	public List<ExceptionDefault> getException(String index) throws IOException {
+
+		SearchRequest searchRequest = new SearchRequest(index);
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+		searchSourceBuilder.size(1000);
+		searchRequest.source(searchSourceBuilder);
+
+		SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
+
+		SearchHits hits = searchResponse.getHits();
+
+		List<ExceptionDefault> exceptionLogs = new ArrayList<>();
+
+		for (SearchHit hit : hits) {
+
+			ExceptionDefault logs = new ExceptionDefault();
+
+			// Check if "ErrorMessage" key exists and if it's not null before accessing it
+			if (hit.getSourceAsMap().containsKey("ErrorMessage") && hit.getSourceAsMap().get("ErrorMessage") != null) {
+				logs.setErrorMessage(hit.getSourceAsMap().get("ErrorMessage").toString());
+				String stackTrace = hit.getSourceAsMap().get("StackTrace").toString();
+				List<String> lines = new ArrayList<>(Arrays.asList(stackTrace.split("\\r\\n\\tat ")));
+				logs.setStackTrace(lines);
+				exceptionLogs.add(logs);
+			}
+
+		}
+		return exceptionLogs;
+	}
 
 }

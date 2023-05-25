@@ -89,20 +89,4 @@ public class AggregationController {
         return ResponseEntity.ok("Report generated successfully");
     }
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }
