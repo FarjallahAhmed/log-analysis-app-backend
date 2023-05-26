@@ -93,12 +93,20 @@ public class AlertConfigurationService {
 	    return logCount > thresholdValue;
 	}
 	
-	public void sendEmailNotification(String recipientEmail, String subject, String content) {
+	public void sendEmailNotification(String recipientEmail, String subject, String content,AlertConfiguration alert) {
+		
+		StringBuilder emailBody = new StringBuilder();
+		emailBody.append("Alert Details:\n");
+		emailBody.append("Alert Name: ").append(alert.getAlertName()).append("\n");
+		emailBody.append("Trigger Condition: ").append(alert.getTriggerCondition()).append("\n");
+		emailBody.append("Time Window: ").append(alert.getTimeWindow()).append("\n");
+		emailBody.append("Alert Description: ").append(alert.getAlertDescription()).append("\n");
+		emailBody.append("Escalation Level: ").append(alert.getEscalationLevel()).append("\n");
 		
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(recipientEmail);
         message.setSubject(subject);
-        message.setText(content);
+        message.setText(emailBody.toString());
         mailSender.send(message);
     }
 	

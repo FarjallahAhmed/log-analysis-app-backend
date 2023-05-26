@@ -101,9 +101,9 @@ public class AlertConfigurationController {
         			
         			System.out.println("start notifications logs");
         			String recipientEmail = "pfepfetest@gmail.com";
-        	        String subject = "Alert Triggered";
+        	        String subject = "Alert Logs Errors";
         	        String content = "alert of the logs ERROR.";
-        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content);
+        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content,alertConfiguration);
              
                 }
         	}
@@ -115,9 +115,9 @@ public class AlertConfigurationController {
         			
         			System.out.println("start notifications exception");
         			String recipientEmail = "pfepfetest@gmail.com";
-        	        String subject = "Alert Triggered";
+        	        String subject = "Alert Logs Exception";
         	        String content = "alert of the exception.";
-        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content);
+        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content,alertConfiguration);
                 	
                 }
         	}
