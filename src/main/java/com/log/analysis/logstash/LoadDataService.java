@@ -5,6 +5,9 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.springframework.stereotype.Service;
 
@@ -42,4 +45,27 @@ public class LoadDataService {
 		}
 		
 	}
+	
+	
+	
+	
+	
+	public String modifyLogstashConfig(String configFilePath, String directory) throws IOException {
+		
+		  String config = Files.readString(Paths.get(configFilePath));
+		  String modifiedConfig = config.replace("/path/to/directory/*", directory);
+		  
+		  // Write the modified configuration to a temporary file
+		  Path tempFile = Files.createTempFile("logstash", ".conf");
+		  Files.writeString(tempFile, modifiedConfig);
+
+		  return tempFile.toAbsolutePath().toString();
+	}
+	
+	
+	
+	
+	
+	
+	
 }
