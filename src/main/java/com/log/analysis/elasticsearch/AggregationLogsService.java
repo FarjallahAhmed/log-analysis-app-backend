@@ -24,6 +24,7 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.bucket.range.DateRangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.io.FileOutputStream;
 
@@ -46,7 +48,7 @@ import java.io.FileOutputStream;
 
 
 
-
+import org.elasticsearch.search.sort.SortOrder;
 
 @Service
 public class AggregationLogsService {
@@ -62,17 +64,22 @@ public class AggregationLogsService {
 	
 	public Map<String, Long> getLogsPerMonth(String index) throws IOException{
 		
-		Map<String, Long> results = new HashMap<>();
+		Map<String, Long> results = new TreeMap<>();
 		
 		SearchRequest searchRequest = new SearchRequest(index);
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		
+		BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()
+                .must(QueryBuilders.existsQuery("log_date"));
+        searchSourceBuilder.query(queryBuilder);
 		searchSourceBuilder.size(0);
+		
 		
 		searchSourceBuilder.aggregation(
 				AggregationBuilders.dateHistogram("log_per_month")
 					.field("@timestamp")
 					.calendarInterval(DateHistogramInterval.MONTH)
+					
 				);
 		
 		searchRequest.source(searchSourceBuilder);
@@ -87,8 +94,8 @@ public class AggregationLogsService {
 			
 		}
 		
-		
-		return results;
+		Map<String, Long> sortedResult = new TreeMap<>(results);
+		return sortedResult;
 	}
 
 	public Map<String,Long> getTopMessage(String index) throws IOException{

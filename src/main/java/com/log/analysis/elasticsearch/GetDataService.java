@@ -1,6 +1,8 @@
 package com.log.analysis.elasticsearch;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,11 +11,13 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,12 +27,19 @@ import org.springframework.stereotype.Service;
 import com.log.analysis.elasticsearch.model.Default;
 import com.log.analysis.elasticsearch.model.ExceptionDefault;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+
+import java.util.Map;
 
 @Service
 public class GetDataService {
 
 	@Autowired
 	private RestHighLevelClient restClient;
+	
+    private final DateTimeFormatter logDateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm:ss:SSS");
 
 	
 	public List<ExceptionDefault> getLogsWithSpecificMessage(String errorMessage, String index) throws IOException {
@@ -142,8 +153,6 @@ public class GetDataService {
 		return new PageImpl<>(exceptionLogs, pageable, exceptionLogs.size());
 	}
 	
-	
-	
 	public List<Default> getLogs(String index) throws IOException {
 
 		SearchRequest searchRequest = new SearchRequest(index);
@@ -184,7 +193,6 @@ public class GetDataService {
 		return simpleLogs;
 	}
 	
-	
 	public List<ExceptionDefault> getException(String index) throws IOException {
 
 		SearchRequest searchRequest = new SearchRequest(index);
@@ -216,5 +224,56 @@ public class GetDataService {
 		}
 		return exceptionLogs;
 	}
+
+	
+	public List<Default> getRealTimeLogs(String index) throws IOException {
+        Instant now = Instant.now();
+        Instant twentyFourHoursAgo = now.minus(24, ChronoUnit.HOURS);
+
+        SearchRequest searchRequest = new SearchRequest(index);
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        
+        RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("@timestamp")
+                .gte(twentyFourHoursAgo)
+                .lte(now);
+        
+
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery()
+	            .must(rangeQuery)
+	            .must(QueryBuilders.existsQuery("log_date"));
+
+        sourceBuilder.query(boolQuery);
+        sourceBuilder.sort("@timestamp", SortOrder.DESC);
+        searchRequest.source(sourceBuilder);
+        
+        SearchResponse searchResponse = restClient.search(searchRequest, RequestOptions.DEFAULT);
+
+		SearchHits hits = searchResponse.getHits();
+
+		List<Default> simpleLogs = new ArrayList<>();
+		
+		for (SearchHit hit : hits) {
+
+			Default logs = new Default();
+
+			if (hit.getSourceAsMap().containsKey("loglevel") && hit.getSourceAsMap().get("loglevel") != null
+					&& hit.getSourceAsMap().containsKey("logger") && hit.getSourceAsMap().get("logger") != null) {
+
+				logs.setLogger(hit.getSourceAsMap().get("logger").toString());
+				logs.setLoglevel(hit.getSourceAsMap().get("loglevel").toString());
+				logs.setDay(hit.getSourceAsMap().get("day").toString());
+				logs.setMonth(hit.getSourceAsMap().get("month").toString());
+				logs.setYear(hit.getSourceAsMap().get("year").toString());
+				logs.setLogDate(hit.getSourceAsMap().get("log_date").toString());
+				logs.setLogMessage(hit.getSourceAsMap().get("logmessage").toString());
+				logs.setPackagee(hit.getSourceAsMap().get("package").toString());
+				logs.setThreadName(hit.getSourceAsMap().get("threadname").toString());
+				simpleLogs.add(logs);
+			}
+
+		}
+        return simpleLogs;
+    }
+
 
 }

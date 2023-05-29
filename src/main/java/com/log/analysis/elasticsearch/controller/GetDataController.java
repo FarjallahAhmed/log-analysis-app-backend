@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -110,18 +111,15 @@ public class GetDataController {
 	}
 
 	
+	@GetMapping("/realtime/{index}")
+    public ResponseEntity<List<Default>> getRealTimeLogs(@PathVariable("index") String index) throws IOException {
+		List<Default> myDataList = getDataService.getRealTimeLogs(index);
+        return ResponseEntity.status(HttpStatus.OK).body(myDataList);
+    }
+
+
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 	
 	
