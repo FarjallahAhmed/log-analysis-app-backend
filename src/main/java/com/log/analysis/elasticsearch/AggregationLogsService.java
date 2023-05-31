@@ -47,9 +47,6 @@ import java.io.FileOutputStream;
 
 
 
-
-import org.elasticsearch.search.sort.SortOrder;
-
 @Service
 public class AggregationLogsService {
 	

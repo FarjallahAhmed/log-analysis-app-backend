@@ -26,12 +26,8 @@ import org.springframework.stereotype.Service;
 
 import com.log.analysis.elasticsearch.model.Default;
 import com.log.analysis.elasticsearch.model.ExceptionDefault;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import java.util.Map;
 
 @Service
 public class GetDataService {
