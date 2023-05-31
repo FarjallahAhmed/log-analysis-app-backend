@@ -5,8 +5,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.log.analysis.elasticsearch.model.ReportData;
@@ -14,6 +15,7 @@ import com.log.analysis.report.service.PdfReportGenerator;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/api/report")
 public class ReportController {
 	
 	@Autowired
@@ -21,7 +23,7 @@ public class ReportController {
 	
 	
 	
-	@GetMapping("/generate-report")
+	@PostMapping("/generate-report-pdf")
     public String generateReport(@RequestBody Map<String, Object> logData) {
         // Retrieve the data and create the ReportData object
         ReportData reportData = reportGenerator.retrieveData(logData);

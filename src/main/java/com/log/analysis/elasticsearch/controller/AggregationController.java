@@ -22,7 +22,7 @@ import com.log.analysis.elasticsearch.AggregationLogsService;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
-@RequestMapping("/agg")
+@RequestMapping("/api/agg")
 public class AggregationController {
 	
 	@Autowired
@@ -76,17 +76,5 @@ public class AggregationController {
         }
     }
 	
-	@PostMapping("/report")
-    public ResponseEntity<String> generateReport(@RequestBody Map<String, Object> logData) throws IOException {
-		
-        try {
-			aggs.generateReportPDF(logData,"report.pdf");
-			
-		} catch (com.itextpdf.text.DocumentException e) {
-			
-			e.printStackTrace();
-		}
-        return ResponseEntity.ok("Report generated successfully");
-    }
 	
 }

@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.action.search.SearchResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +37,7 @@ public class GetDataController {
 	private FilterLogsService filterLogsService;
 	
 	
-	@GetMapping(path = "simplelogs/{index}")
+	@GetMapping(path = "retrive-logs/{index}")
 	public ResponseEntity<Page<Default>> getDefaultSimpleLogs(Pageable pageable,@PathVariable("index") String index){
 		try {
 			Page<Default> myDataList = getDataService.getSimpleLogs(pageable,index);
@@ -48,7 +48,7 @@ public class GetDataController {
 		}
 	}
 	
-	@GetMapping(path = "exceptionlogs/{index}")
+	@GetMapping(path = "retrive-exception/{index}")
 	public ResponseEntity<Page<ExceptionDefault>> getDefaultExceptionogs(Pageable pageable,@PathVariable("index") String index){
 		try {
 			Page<ExceptionDefault> myDataList = getDataService.getExceptionLogs(pageable,index);
