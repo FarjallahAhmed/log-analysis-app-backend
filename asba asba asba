@@ -1,0 +1,44 @@
+input {
+  
+  file {
+    path => "asba asba asba"
+    start_position => "beginning"
+    sincedb_path => "NUL"
+    codec => multiline {
+
+                pattern => "^\s"
+
+                negate => false
+
+                what => "previous"
+                auto_flush_interval => 1
+
+        }
+  }
+}
+
+filter {
+
+    #match => { "message" => "(?m)(?<ErrorMessage>[a-zA-Z$_0-9 \S]*)\s*(?<StackTrace>(.|\r|\n)*)"}
+
+  grok {
+    match => { "message" => "asba asba"}
+  }
+
+if "multiline" in [tags] {
+    grok {
+    match => { "message" => "asba asba"}
+    }
+  }			
+  
+}
+
+output {
+  elasticsearch {
+    hosts => ["localhost:9200"]
+    index => "default_angular"
+    user => "elastic"
+    password => "DvTMnr0pDy-e7EcanLgr"
+  }
+    stdout { codec => rubydebug }
+}

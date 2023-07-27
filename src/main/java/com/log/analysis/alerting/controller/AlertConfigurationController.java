@@ -91,38 +91,8 @@ public class AlertConfigurationController {
         List<Default> logs = this.getService.getLogs("default_log_index");
         List<ExceptionDefault> exception = this.getService.getException("default_log_index");
         
-     // Iterate through the alert configurations
-        for (AlertConfiguration alertConfiguration : alertConfigurations) {
-        	if (alertConfiguration.getTriggerCondition().equals("logLevel")) {
-        		
-        		List<Default> relevantLogs = this.alertConfigurationService.getRelevantLogs(logs);
-        		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
-        		if (isAlertTriggered) {
-        			
-        			System.out.println("start notifications logs");
-        			String recipientEmail = "pfepfetest@gmail.com";
-        	        String subject = "Alert Logs Errors";
-        	        String content = "alert of the logs ERROR.";
-        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content,alertConfiguration);
-             
-                }
-        	}
-        	else if (alertConfiguration.getTriggerCondition().equals("exception")) {
-        		
-        		List<ExceptionDefault> relevantLogs = this.alertConfigurationService.getRelevantException(alertConfiguration.getTimeWindow(),exception);
-        		boolean isAlertTriggered = this.alertConfigurationService.evaluateConditions(alertConfiguration, relevantLogs);
-        		if (isAlertTriggered) {
-        			
-        			System.out.println("start notifications exception");
-        			String recipientEmail = "pfepfetest@gmail.com";
-        	        String subject = "Alert Logs Exception";
-        	        String content = "alert of the exception.";
-        			this.alertConfigurationService.sendEmailNotification(recipientEmail, subject, content,alertConfiguration);
-                	
-                }
-        	}
-
-        }
+        this.alertConfigurationService.triggerAlerts(alertConfigurations,logs,exception);
+        
 
         return new ResponseEntity<>(null, HttpStatus.OK);
     }
