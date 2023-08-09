@@ -110,7 +110,7 @@ public class AlertConfigurationService {
 	    int thresholdValue = alertConfiguration.getThresholdValue();
 	    boolean status = alertConfiguration.getStatus();
 
-	    return (logCount > thresholdValue && status);
+	    return (logCount > thresholdValue || status);
 	}
 	/*
 	public void sendEmailNotification(String recipientEmail, String subject, String content,AlertConfiguration alert) {
